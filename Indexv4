@@ -1,0 +1,640 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Let's Learn Arabic — The Basics</title>
+<style>
+:root {
+  --teal:#155456;
+  --gold:#b38a48;
+  --cream:#fff9ee;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  background:var(--cream);
+  color:#26484a;
+  font-family:Arial,sans-serif;
+}
+main {
+  max-width:650px;
+  margin:auto;
+  padding:20px;
+}
+h1,h2 { color:var(--teal);text-align:center; }
+h1 { font-family:Georgia,serif; }
+p { text-align:center;line-height:1.5; }
+button {
+  border:1px solid #d2c4a9;
+  border-radius:12px;
+  background:white;
+  padding:13px;
+  font-size:16px;
+  cursor:pointer;
+  color:#26484a;
+}
+button:disabled { opacity:.4; }
+.primary {
+  background:var(--teal);
+  color:white;
+  border-color:var(--teal);
+}
+.good { background:#e1f3e9; }
+.bad { background:#fbe5e3; }
+.hidden { display:none!important; }
+.grid {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+.deck {
+  min-height:125px;
+  font-weight:bold;
+  font-size:18px;
+}
+.deck span {
+  display:block;
+  font-size:34px;
+  margin-bottom:12px;
+}
+.row {
+  display:flex;
+  gap:10px;
+  margin:15px 0;
+}
+.row button { flex:1; }
+.card {
+  background:white;
+  border:2px solid #d7c6a5;
+  border-radius:24px;
+  min-height:310px;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  box-shadow:0 6px 0 #eadfcb;
+}
+.arabic {
+  direction:rtl;
+  font-family:"Geeza Pro","Traditional Arabic",serif;
+  font-size:95px;
+  line-height:1.5;
+}
+.answer {
+  font-size:25px;
+  font-weight:bold;
+  color:#966c31;
+  margin:12px;
+}
+.choices {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin:20px 0;
+}
+.choice {
+  display:block;
+  background:white;
+  border:1px solid #d7c6a5;
+  padding:12px 5px;
+  text-align:center;
+  border-radius:10px;
+}
+.choice input { accent-color:var(--teal); }
+.choice strong {
+  display:block;
+  font-size:25px;
+  direction:rtl;
+  margin:5px;
+}
+.choice small { font-size:12px; }
+.status {
+  text-align:center;
+  color:#75817c;
+  margin:12px;
+}
+select {
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  margin:10px 0;
+}
+</style>
+</head>
+<body>
+<main>
+<h1>Let's Learn Arabic</h1>
+<p>— The Basics —</p>
+
+<section id="menu">
+  <h2>Choose a Deck</h2>
+  <div class="grid">
+    <button class="deck" onclick="choose('letters')">
+      <span>ا ب ت</span>Arabic Letters
+    </button>
+    <button class="deck" onclick="choose('forms')">
+      <span>بـ ـبـ ـب</span>Letter Forms
+    </button>
+    <button class="deck" onclick="choose('numbers')">
+      <span>١ ٢ ٣</span>Numbers
+    </button>
+    <button class="deck" onclick="choose('colors')">
+      <span>🎨</span>Colors
+    </button>
+    <button class="deck" onclick="choose('foods')">
+      <span>🍎</span>Fruits & Vegetables
+    </button>
+    <button class="deck" onclick="choose('animals')">
+      <span>🐪</span>Animals
+    </button>
+  </div>
+</section>
+
+<section id="picker" class="hidden">
+  <button onclick="home()">← Main Menu</button>
+  <h2 id="pickerTitle"></h2>
+  <p>Select the cards you'd like to practice.</p>
+  <div class="row">
+    <button onclick="pickAll()">Select All</button>
+    <button onclick="pickFirst()">First 5</button>
+    <button onclick="pickNone()">Clear</button>
+  </div>
+  <div id="choices" class="choices"></div>
+  <button class="primary" style="width:100%" onclick="start()">
+    Start Selected Cards
+  </button>
+</section>
+
+<section id="study" class="hidden">
+  <div class="row">
+    <button onclick="home()">⌂ Menu</button>
+    <button onclick="goPicker()">Change Cards</button>
+  </div>
+
+  <p id="progress"></p>
+
+  <div class="card" onclick="flip()">
+    <div id="symbol" class="arabic"></div>
+    <div id="answer" class="answer hidden"></div>
+    <small id="hint">Tap to reveal the answer</small>
+  </div>
+
+  <button class="primary" style="width:100%;margin-top:20px"
+    onclick="event.stopPropagation();speak()">
+    🔊 Hear Arabic Pronunciation
+  </button>
+
+  <select id="voice">
+    <option value="">Automatic Arabic Voice</option>
+  </select>
+
+  <div class="row">
+    <button onclick="previous()">← Previous</button>
+    <button onclick="next()">Next →</button>
+  </div>
+
+  <div class="row">
+    <button class="bad" onclick="mark(false)">
+      ✕ Practice Again
+    </button>
+    <button class="good" onclick="mark(true)">
+      ✓ I Knew It
+    </button>
+  </div>
+  <p id="status" class="status"></p>
+</section>
+
+<section id="results" class="hidden">
+  <h2 id="resultTitle"></h2>
+  <p id="resultText"></p>
+  <button id="reviewButton" class="primary"
+    style="width:100%" onclick="review()">
+    Review Missed Cards
+  </button>
+  <div class="row">
+    <button onclick="start()">Restart</button>
+    <button onclick="home()">Main Menu</button>
+  </div>
+</section>
+</main>
+
+<script>
+"use strict";
+
+// The complete alphabet.
+const symbols =
+"ابتثجحخدذرزسشصضطظعغفقكلمنهوي";
+
+const names = [
+"Alif","Baa","Taa","Thaa","Jeem","Haa",
+"Khaa","Daal","Dhaal","Raa","Zay",
+"Seen","Sheen","Saad","Daad","Heavy Taa",
+"Heavy Zaa","Ayn","Ghayn","Faa","Qaaf",
+"Kaaf","Laam","Meem","Noon","Heh",
+"Waaw","Yaa"
+];
+
+const sounds = [
+"ألف","باء","تاء","ثاء","جيم","حاء",
+"خاء","دال","ذال","راء","زاي",
+"سين","شين","صاد","ضاد","طاء",
+"ظاء","عين","غين","فاء","قاف",
+"كاف","لام","ميم","نون","هاء",
+"واو","ياء"
+];
+
+// Beginning, middle and final written forms.
+const formLines = [
+"ﺍ ﺎ ﺎ","ﺑ ﺒ ﺐ","ﺗ ﺘ ﺖ",
+"ﺛ ﺜ ﺚ","ﺟ ﺠ ﺞ","ﺣ ﺤ ﺢ",
+"ﺧ ﺨ ﺦ","ﺩ ﺪ ﺪ","ﺫ ﺬ ﺬ",
+"ﺭ ﺮ ﺮ","ﺯ ﺰ ﺰ","ﺳ ﺴ ﺲ",
+"ﺷ ﺸ ﺶ","ﺻ ﺼ ﺺ","ﺿ ﻀ ﺾ",
+"ﻃ ﻄ ﻂ","ﻇ ﻈ ﻆ","ﻋ ﻌ ﻊ",
+"ﻏ ﻐ ﻎ","ﻓ ﻔ ﻒ","ﻗ ﻘ ﻖ",
+"ﻛ ﻜ ﻚ","ﻟ ﻠ ﻞ","ﻣ ﻤ ﻢ",
+"ﻧ ﻨ ﻦ","ﻫ ﻬ ﻪ","ﻭ ﻮ ﻮ",
+"ﻳ ﻴ ﻲ"
+];
+
+const numberNames = [
+"Zero","One","Two","Three","Four","Five",
+"Six","Seven","Eight","Nine","Ten",
+"Eleven","Twelve","Thirteen","Fourteen",
+"Fifteen","Sixteen","Seventeen",
+"Eighteen","Nineteen","Twenty"
+];
+
+const numberArabic = [
+"صفر","واحد","اثنان","ثلاثة","أربعة",
+"خمسة","ستة","سبعة","ثمانية","تسعة",
+"عشرة","أحد عشر","اثنا عشر","ثلاثة عشر",
+"أربعة عشر","خمسة عشر","ستة عشر",
+"سبعة عشر","ثمانية عشر","تسعة عشر",
+"عشرون"
+];
+
+const tens = [
+[30,"Thirty","ثلاثون"],
+[40,"Forty","أربعون"],
+[50,"Fifty","خمسون"],
+[60,"Sixty","ستون"],
+[70,"Seventy","سبعون"],
+[80,"Eighty","ثمانون"],
+[90,"Ninety","تسعون"],
+[100,"One Hundred","مئة"]
+];
+
+const colors = [
+["أزرق","Blue","🔵"],
+["أخضر","Green","🟢"],
+["أحمر","Red","🔴"],
+["أسود","Black","⚫"],
+["أبيض","White","⚪"],
+["بني","Brown","🟤"],
+["أصفر","Yellow","🟡"],
+["برتقالي","Orange","🟠"],
+["بنفسجي","Purple","🟣"],
+["وردي","Pink","🩷"],
+["رمادي","Gray","🩶"],
+["ذهبي","Gold","🌟"]
+];
+
+const foods = [
+["تمر","Dates",""],
+["تين","Figs",""],
+["فراولة","Strawberries","🍓"],
+["موز","Bananas","🍌"],
+["تفاح","Apples","🍎"],
+["برتقال","Oranges","🍊"],
+["عنب","Grapes","🍇"],
+["بطيخ","Watermelon","🍉"],
+["كمثرى","Pears","🍐"],
+["خوخ","Peaches","🍑"],
+["جزر","Carrots","🥕"],
+["خيار","Cucumber","🥒"],
+["طماطم","Tomato","🍅"],
+["بطاطس","Potato","🥔"],
+["بصل","Onion","🧅"],
+["ثوم","Garlic","🧄"],
+["خس","Lettuce","🥬"],
+["سبانخ","Spinach",""],
+["بروكلي","Broccoli","🥦"],
+["بازلاء","Peas","🫛"]
+];
+
+const animals = [
+["قط","Cat","🐈"],
+["كلب","Dog","🐕"],
+["طائر","Bird","🐦"],
+["سمكة","Fish","🐟"],
+["أرنب","Rabbit","🐇"],
+["حصان","Horse","🐎"],
+["جمل","Camel","🐪"],
+["بقرة","Cow","🐄"],
+["خروف","Sheep","🐑"],
+["ماعز","Goat","🐐"],
+["أسد","Lion","🦁"],
+["فيل","Elephant","🐘"],
+["زرافة","Giraffe","🦒"],
+["قرد","Monkey","🐒"],
+["دب","Bear","🐻"],
+["دجاجة","Chicken","🐔"]
+];
+
+function card(front,back,say,icon="") {
+  return {front,back,say,icon};
+}
+
+const decks = {
+  letters: Array.from(symbols,(letter,i)=>
+    card(letter,names[i],sounds[i])
+  ),
+
+  forms: formLines.map((forms,i)=>
+    card(forms,
+      names[i]+" — Beginning · Middle · End",
+      sounds[i])
+  ),
+
+  numbers: [],
+  colors: colors.map(a=>card(a[0],a[1],a[0],a[2])),
+  foods: foods.map(a=>card(a[0],a[1],a[0],a[2])),
+  animals: animals.map(a=>card(a[0],a[1],a[0],a[2]))
+};
+
+function digits(n) {
+  return String(n).replace(/[0-9]/g,
+    x=>"٠١٢٣٤٥٦٧٨٩"[Number(x)]);
+}
+
+// Numbers 1 through 20.
+for(let n=1;n<=20;n++) {
+  decks.numbers.push(
+    card(digits(n),numberNames[n],numberArabic[n])
+  );
+}
+
+// Tens: 30,40,...100.
+for(const [n,en,ar] of tens) {
+  decks.numbers.push(card(digits(n),en,ar));
+}
+
+// Numbers 101 through 110.
+for(let n=101;n<=110;n++) {
+  let ones=n-100;
+  let en="One Hundred and "+numberNames[ones];
+  let ar="مئة و"+numberArabic[ones];
+  decks.numbers.push(card(digits(n),en,ar));
+}
+
+const deckTitles = {
+  letters:"Arabic Letters",
+  forms:"Letter Forms",
+  numbers:"Arabic Numbers",
+  colors:"Colors",
+  foods:"Fruits & Vegetables",
+  animals:"Animals"
+};
+
+const $=id=>document.getElementById(id);
+
+let selectedDeck="letters";
+let selected=[];
+let queue=[];
+let position=0;
+let grading=new Map();
+let missed=[];
+
+function page(id) {
+  for(const name of ["menu","picker","study","results"])
+    $(name).classList.toggle("hidden",name!==id);
+}
+
+function home() {
+  stopSpeaking();
+  page("menu");
+}
+
+function choose(id) {
+  selectedDeck=id;
+  selected=decks[id].map((_,i)=>i);
+  renderPicker();
+  page("picker");
+}
+
+function renderPicker() {
+  $("pickerTitle").textContent=deckTitles[selectedDeck];
+  $("choices").replaceChildren();
+
+  decks[selectedDeck].forEach((item,i)=>{
+    const label=document.createElement("label");
+    label.className="choice";
+
+    const input=document.createElement("input");
+    input.type="checkbox";
+    input.checked=selected.includes(i);
+    input.onchange=()=>{
+      if(input.checked) {
+        if(!selected.includes(i)) selected.push(i);
+      } else {
+        selected=selected.filter(x=>x!==i);
+      }
+      selected.sort((a,b)=>a-b);
+    };
+
+    const symbol=document.createElement("strong");
+    symbol.textContent=item.front;
+
+    const caption=document.createElement("small");
+    caption.textContent=item.back;
+
+    label.append(input,symbol,caption);
+    $("choices").append(label);
+  });
+}
+
+function pickAll() {
+  selected=decks[selectedDeck].map((_,i)=>i);
+  renderPicker();
+}
+
+function pickFirst() {
+  selected=decks[selectedDeck]
+    .slice(0,5).map((_,i)=>i);
+  renderPicker();
+}
+
+function pickNone() {
+  selected=[];
+  renderPicker();
+}
+
+function goPicker() {
+  stopSpeaking();
+  renderPicker();
+  page("picker");
+}
+
+function begin(indices) {
+  if(!indices.length) {
+    alert("Please select at least one card.");
+    return;
+  }
+  queue=[...indices];
+  position=0;
+  grading=new Map();
+  showCard();
+  page("study");
+}
+
+function start() {
+  begin(selected);
+}
+
+function current() {
+  return decks[selectedDeck][queue[position]];
+}
+
+function showCard() {
+  stopSpeaking();
+  let item=current();
+
+  $("symbol").textContent=
+    (item.icon ? item.icon+" " : "")+item.front;
+
+  $("answer").textContent=item.back;
+  $("answer").classList.add("hidden");
+  $("hint").textContent="Tap to reveal the answer";
+
+  $("progress").textContent=
+    deckTitles[selectedDeck]+
+    " — Card "+(position+1)+" of "+queue.length;
+
+  $("status").textContent="Mark ✓ or ×, or browse cards.";
+}
+
+function flip() {
+  $("answer").classList.remove("hidden");
+  $("hint").textContent="Listen, then mark your answer.";
+}
+
+function previous() {
+  if(position>0) {
+    position--;
+    showCard();
+  }
+}
+
+function next() {
+  if(position<queue.length-1) {
+    position++;
+    showCard();
+  } else {
+    finish();
+  }
+}
+
+function mark(correct) {
+  grading.set(queue[position],correct);
+
+  if(position<queue.length-1) {
+    position++;
+    showCard();
+  } else {
+    finish();
+  }
+}
+
+function finish() {
+  stopSpeaking();
+
+  missed=queue.filter(i=>grading.get(i)!==true);
+  const correct=queue.length-missed.length;
+
+  $("resultTitle").textContent=
+    missed.length===0 ? "Wonderful! 🎉" : "Great effort!";
+
+  $("resultText").textContent=
+    correct+" correct · "+missed.length+" to review. "+
+    "Skipped cards are included in review.";
+
+  $("reviewButton").classList.toggle(
+    "hidden",missed.length===0
+  );
+
+  page("results");
+}
+
+function review() {
+  begin(missed);
+}
+
+// Arabic speech using available iPhone voices.
+let arabicVoices=[];
+
+function loadVoices() {
+  if(!("speechSynthesis" in window)) return;
+
+  arabicVoices=speechSynthesis.getVoices()
+    .filter(v=>v.lang.toLowerCase().startsWith("ar"));
+
+  const menu=$("voice");
+  menu.replaceChildren();
+  menu.add(new Option("Automatic Arabic Voice",""));
+
+  arabicVoices.forEach((voice,i)=>{
+    menu.add(new Option(
+      voice.name+" ("+voice.lang+")",String(i)
+    ));
+  });
+}
+
+function stopSpeaking() {
+  if("speechSynthesis" in window)
+    speechSynthesis.cancel();
+}
+
+function speak() {
+  if(!("speechSynthesis" in window)) {
+    alert("Speech playback is unavailable.");
+    return;
+  }
+
+  stopSpeaking();
+  let item=current();
+
+  const speech=new SpeechSynthesisUtterance(item.say);
+  const value=$("voice").value;
+
+  let chosen=value!=="" ?
+    arabicVoices[Number(value)] :
+    arabicVoices.find(v=>v.lang==="ar-001") ||
+    arabicVoices[0];
+
+  if(chosen) {
+    speech.voice=chosen;
+    speech.lang=chosen.lang;
+  } else {
+    speech.lang="ar";
+  }
+
+  speech.rate=0.78;
+  speech.pitch=1;
+  speechSynthesis.speak(speech);
+}
+
+loadVoices();
+
+if("speechSynthesis" in window) {
+  speechSynthesis.onvoiceschanged=loadVoices;
+}
+
+page("menu");
+</script>
+</body>
+</html>
